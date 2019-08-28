@@ -1,7 +1,7 @@
-class TableCreationQuery():
+class PostgresQuery():
 
-    weather_staging = """
-        create table if not exists weather_staging (
+    weather_creation = """
+        create table if not exists weather (
             id serial primary key,
             fecha date,
             anio int,
@@ -22,11 +22,8 @@ class TableCreationQuery():
         )
     """
 
-
-class TableInsertionQuery():
-
-    weather_staging = """
-        insert into weather_staging (
+    weather_insertion = """
+        insert into weather (
             fecha,
             anio,
             mes,
@@ -64,7 +61,7 @@ class TableInsertionQuery():
         )
     """
 
-    temperatures_by_month_and_city = """
+    daily_temps_by_city_selection = """
           select anio,
                  mes,
                  provincia,

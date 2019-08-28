@@ -1,7 +1,7 @@
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.operators import BaseOperator
 from airflow.utils.decorators import apply_defaults
-from capstone_plugin.helpers.postgres import TableInsertionQuery
+from capstone_plugin.helpers.postgres import PostgresQuery
 from capstone_plugin.hooks.aemet import AemetHook
 
 
@@ -60,7 +60,7 @@ class ImportWeatherOperator(BaseOperator):
 
         for index, row in weather_df.iterrows():
             postgres.run(
-                TableInsertionQuery.weather_staging,
+                PostgresQuery.weather_insertion,
                 parameters=row,
                 autocommit=True
             )
