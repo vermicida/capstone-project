@@ -1,7 +1,7 @@
 version: '3'
 services:
 
-  ddbb:
+  ddbb-staging:
     image: postgres:11.5
     environment:
       - POSTGRES_USER=admin
@@ -10,15 +10,22 @@ services:
     ports:
       - "5432:5432"
 
+  ddbb:
+    image: diegoherrera/cassandra:capstone
+    environment:
+      - CASSANDRA_KEYSPACE=weather
+
   postgres:
     image: postgres:11.5
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
+    ports:
+      - "9042:9042"
 
   webserver:
-    image: puckel/docker-airflow:1.10.4
+    image: diegoherrera/airflow:capstone
     restart: always
     depends_on:
       - postgres
@@ -26,8 +33,8 @@ services:
       - LOAD_EX=n
       - EXECUTOR=Local
     volumes:
-    - ./src/airflow/dags:/usr/local/airflow/dags
-    - ./src/airflow/plugins:/usr/local/airflow/plugins
+      - ./src/airflow/dags:/usr/local/airflow/dags
+      - ./src/airflow/plugins:/usr/local/airflow/plugins
     ports:
       - "8080:8080"
     command: webserver
