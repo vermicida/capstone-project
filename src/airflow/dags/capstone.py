@@ -1,16 +1,23 @@
 from airflow import DAG
 from datetime import datetime
-from airflow.operators.capstone_plugin import (
-    CreateTableOperator,
-    ImportWeatherOperator
-)
+from airflow.operators.capstone_plugin import AggregateTableOperator
+from airflow.operators.capstone_plugin import CreateTableOperator
+from airflow.operators.capstone_plugin import ImportWeatherOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 
 options = {
+    'description': 'Spain\'s weather by month, quarter and year',
     'schedule_interval': '@once',
-    'start_date': datetime(2019, 7, 1),
-    'catchup': False
+    'start_date': datetime.now(),
+    'catchup': False,
+    'default_args': {
+        'owner': 'Diego Herrera',
+        'depends_on_past': False,
+        'retries': 3,
+        'retry_delay': 5,
+        'email_on_retry': False
+    }
 }
 
 with DAG('capstone', **options) as dag:
@@ -21,57 +28,71 @@ with DAG('capstone', **options) as dag:
 
     create_weather_table = CreateTableOperator(
         task_id='create_weather_table',
-        ddbb_conn_id='ddbb-staging-conn',
-        table='weather'
+        ddbb_conn_id='ddbb-conn',
+        table='weather_staging'
     )
 
     import_weather = ImportWeatherOperator(
         task_id='import_weather',
-        ddbb_conn_id='ddbb-staging-conn',
+        ddbb_conn_id='ddbb-conn',
         aemet_conn_id='aemet-conn',
-        from_date='2019-07-01',
-        to_date='2019-07-31'
+        from_date='2019-06-20',
+        to_date='2019-07-10'
     )
 
-    create_daily_temps_by_city_table = CreateTableOperator(
-        task_id='create_daily_temps_by_city_table',
+    create_temps_by_month_table = CreateTableOperator(
+        task_id='create_temps_by_month_table',
         ddbb_conn_id='ddbb-conn',
-        table='daily_temps_by_city'
+        table='temps_by_month'
     )
 
-    create_weekly_temps_by_city_table = CreateTableOperator(
-        task_id='create_weekly_temps_by_city_table',
+    create_temps_by_quarter_table = CreateTableOperator(
+        task_id='create_temps_by_quarter_table',
         ddbb_conn_id='ddbb-conn',
-        table='weekly_temps_by_city'
+        table='temps_by_quarter'
     )
 
-    create_monthly_temps_by_city_table = CreateTableOperator(
-        task_id='create_monthly_temps_by_city_table',
+    create_temps_by_year_table = CreateTableOperator(
+        task_id='create_temps_by_year_table',
         ddbb_conn_id='ddbb-conn',
-        table='monthly_temps_by_city'
+        table='temps_by_year'
     )
 
-    create_quarterly_temps_by_city_table = CreateTableOperator(
-        task_id='create_quarterly_temps_by_city_table',
+    import_temps_by_month_table = AggregateTableOperator(
+        task_id='import_temps_by_month_table',
         ddbb_conn_id='ddbb-conn',
-        table='quarterly_temps_by_city'
+        table='temps_by_month'
     )
 
-    create_yearly_temps_by_city_table = CreateTableOperator(
-        task_id='create_yearly_temps_by_city_table',
+    import_temps_by_quarter_table = AggregateTableOperator(
+        task_id='import_temps_by_quarter_table',
         ddbb_conn_id='ddbb-conn',
-        table='yearly_temps_by_city'
+        table='temps_by_quarter'
     )
 
+    import_temps_by_year_table = AggregateTableOperator(
+        task_id='import_temps_by_year_table',
+        ddbb_conn_id='ddbb-conn',
+        table='temps_by_year'
+    )
+
+    # Creates the staging table.
     start >> create_weather_table
+
+    # Imports the weather from the AEMET API.
     create_weather_table >> import_weather
-    import_weather >> create_daily_temps_by_city_table
-    import_weather >> create_weekly_temps_by_city_table
-    import_weather >> create_monthly_temps_by_city_table
-    import_weather >> create_quarterly_temps_by_city_table
-    import_weather >> create_yearly_temps_by_city_table
-    create_daily_temps_by_city_table >> end
-    create_weekly_temps_by_city_table >> end
-    create_monthly_temps_by_city_table >> end
-    create_quarterly_temps_by_city_table >> end
-    create_yearly_temps_by_city_table >> end
+
+    # Creates the fact tables.
+    import_weather >> create_temps_by_month_table
+    import_weather >> create_temps_by_quarter_table
+    import_weather >> create_temps_by_year_table
+
+    # Imports the aggregate weather into the fact tables.
+    create_temps_by_month_table >> import_temps_by_month_table
+    create_temps_by_quarter_table >> import_temps_by_quarter_table
+    create_temps_by_year_table >> import_temps_by_year_table
+
+    # Pipeline end.
+    import_temps_by_month_table >> end
+    import_temps_by_quarter_table >> end
+    import_temps_by_year_table >> end

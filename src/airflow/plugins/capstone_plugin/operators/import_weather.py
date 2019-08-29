@@ -1,7 +1,7 @@
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.operators import BaseOperator
 from airflow.utils.decorators import apply_defaults
-from capstone_plugin.helpers.postgres import PostgresQuery
+from capstone_plugin.helpers import queries
 from capstone_plugin.hooks.aemet import AemetHook
 
 
@@ -11,9 +11,6 @@ class ImportWeatherOperator(BaseOperator):
     This operator handles the import process of the weather data, retrieved
     from the AEMET API, to the application database.
     """
-
-    ui_color = ''
-    ui_fgcolor = ''
 
     @apply_defaults
     def __init__(
@@ -55,12 +52,12 @@ class ImportWeatherOperator(BaseOperator):
             self._from_date,
             self._to_date
         )
-
+        query = queries.INSERTION_QUERIES['weather_staging']
         postgres = PostgresHook(self._ddbb_conn_id)
 
         for index, row in weather_df.iterrows():
             postgres.run(
-                PostgresQuery.weather_insertion,
+                query,
                 parameters=row,
                 autocommit=True
             )

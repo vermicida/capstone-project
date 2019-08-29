@@ -4,15 +4,14 @@ from airflow.utils.decorators import apply_defaults
 from capstone_plugin.helpers import queries
 
 
-class CreateTableOperator(BaseOperator):
+class AggregateTableOperator(BaseOperator):
 
     """
-    This operator handles the creation of the necessary tables in
-    the application database.
+    This operator aggregates the weather data stored in the staging table and
+    pushes it to a given fact table.
     """
 
     _available_tables = (
-        'weather_staging',
         'temps_by_month',
         'temps_by_quarter',
         'temps_by_year'
@@ -28,7 +27,7 @@ class CreateTableOperator(BaseOperator):
     ):
 
         """
-        Initializes a new instance of the class CreateTableOperator.
+        Initializes a new instance of the class AggregateTableOperator.
 
         Parameters:
             ddbb_conn_id (str): The identifier of the database connection.
@@ -42,7 +41,8 @@ class CreateTableOperator(BaseOperator):
     def execute(self, context):
 
         """
-        Creates a table using the given database connection.
+        Aggregates the weather data stored in the staging table and pushes it
+        to the given fact table.
 
         Parameters:
             context (dict): Contains info related to the task instance.
@@ -53,5 +53,5 @@ class CreateTableOperator(BaseOperator):
             message = 'Only these tables are supported: {}'.format(tables)
             raise ValueError(message)
 
-        query = queries.CREATION_QUERIES[self._table]
+        query = queries.INSERTION_QUERIES[self._table]
         PostgresHook(self._ddbb_conn_id).run(query)

@@ -85,7 +85,12 @@ class AemetHook(HttpHook):
             '{}T23:59:59UTC'.format(to_date),
             'todasestaciones'
         ))
-        return super().run(endpoint).json()['datos']
+        response = super().run(endpoint).json()
+
+        if 'datos' not in response:
+            raise BaseException('Error while requesting the AEMET API: {}'.format(response))  # noqa: E501
+
+        return response['datos']
 
     def _get_weather_data(self, resource):
 
