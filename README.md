@@ -14,7 +14,7 @@ We want to analyze how the weather in Spain is doing. The Meteorology Statal Age
   - [Configuring connections](#configuring-connections)
     - [AEMET API connection](#aemet-api-connection)
     - [Application database connection](#application-database-connection)
-  - [Running the Capstone Project DAG](#running-capstone-project-dag)
+  - [Running the Capstone Project DAG](#running-the-capstone-project-dag)
   - [Analyzing the data](#analyzing-the-data)
 - [Cleaning the environment](#cleaning-the-environment)
 
@@ -24,13 +24,13 @@ We want to analyze how the weather in Spain is doing. The Meteorology Statal Age
 
 The premises are:
 
-- The weather data is retrieved via API from a external provider (AEMET); it can be given in any format and maybe wrong typed, so we need a mechanism that retrieve, clean and type the data.
+- The weather data is retrieved via API from a external provider (AEMET); it can be given in any format and maybe wrong typed, so we need a mechanism that retrieve, clean and type the data properly.
 - Once the master data is ready, we must store it somewhere. As we want to analyze the weather information, we must think about aggregations: relational databases are a good option.
 - Lastly, we are going to clusterize the data by city and by time range -monthly, quarterly and yearly-. We can use the same relational database to create these fact tables.
 
-We can use [Apache Airflow](https://airflow.apache.org/) and [PostgreSQL](https://www.postgresql.org/) to orchestrate the pipeline. It's a simple pipeline; we can run it locally in a Docker service topology. The architecture model can be like this:
+We can use [Apache Airflow](https://airflow.apache.org/) and [PostgreSQL](https://www.postgresql.org/) to orchestrate the pipeline. It's a simple pipeline; we can run it locally in a Docker services topology. The architecture model can be like this:
 
-<img src="images/architecture-model.png" width="298" alt="Arquitecture model">
+<img src="images/architecture-model.png" width="595" alt="Arquitecture model">
 
 - Apache Airflow with a LocalExecutor
 - A PostgreSQL instance for Apache Airflow's Database Backend
@@ -40,13 +40,13 @@ How this is accomplished with Docker is commented [later](#running-apache-airflo
 
 The data pipeline is shown below:
 
-<img src="images/data-flow.png" width="440" alt="Data flow">
+<img src="images/data-flow.png" width="880" alt="Data flow">
 
-- The source data is retrieved from the AEMET API using a custom Apache Airflow hook. This hook requests the API and transforms the response, a JSON object, into a [Pandas](https://pandas.pydata.org/) DataFrame to ease the data wrangling.
+- The source data is retrieved from the AEMET API using a custom Apache Airflow hook. This hook queries the API and transforms the response, a JSON object, into a [Pandas](https://pandas.pydata.org/) DataFrame to ease the data wrangling.
 - A custom Apache Airflow operator takes the weather DataFrame and pushes it into a staging table in PostgreSQL. This master data will be use as the source for the fact tables.
 - Another custom Apache Airflow operator queries the staging table to aggregate the data and insert it in fact tables, also in PostgreSQL.
 
-The data pipeline be monitorized from the Apache Airflow console: follow the instructions to set it up!
+The data pipeline be monitored from the Apache Airflow console: follow the instructions to set it up!
 
 ## Structure<a name="structure"></a>
 
@@ -126,7 +126,7 @@ Here are listed the steps to follow in order to make the pipeline work.
 
 ### Running Apache Airflow<a name="running-apache-airflow"></a>
 
-We lean on Docker to run Apache Airflow. In the root directory of the project you will find the file `docker-compose.yml`: that's the one that make magic happens! It creates a container topology:
+We lean on Docker to run Apache Airflow. In the root directory of the project you will find the file `docker-compose.yml`: that's the one that make magic happens! It creates a containers topology:
 
 - A container running Apache Airflow with a [LocalExecutor](https://www.astronomer.io/guides/airflow-executors-explained/)
 - A container running PostgreSQL as the Apache Airflow's [Database Backend](https://airflow.readthedocs.io/en/stable/howto/initialize-database.html)
@@ -140,15 +140,13 @@ Let's do it! Run this command in your terminal:
 docker-compose up
 ```
 
-Wait a minute while Docker is starting the services. Now open your browser and navigates to `http://localhost:8080`: Apache Airflow is running now!
+Wait a minute while Docker is starting the services. Now open your browser and navigate to `http://localhost:8080`: Apache Airflow is running now!
 
 ### Configuring connections<a name="configuring-connections"></a>
 
 In the Apache Airflow console, go to the menu **Admin** and select **Connections**:
 
 <img src="images/airflow-connections.png" width="203" alt="Connection option">
-
-Create a new one using the given values. It will be used to connect to the Redshift cluster we created earlier.
 
 #### AEMET API connection<a name="aemet-api-connection"></a>
 
@@ -197,11 +195,14 @@ You can use the Apache Airflow console to run queries over the fact tables. Go t
 
 <img src="images/airflow-adhoc-query-01.png" width="211" alt="Ad Hoc Query option">
 
-And run queries like these:
-
-- The average, max and min temperatures in Madrid by month:
+And run queries like these -don't forget to select the connection `ddbb_conn`-:
 
 ```sql
+
+/*
+    The average, max and min temperatures in Madrid by month
+*/
+
 select *
   from temps_by_month
  where city = 'MADRID'
@@ -209,9 +210,11 @@ select *
 
 <img src="images/airflow-adhoc-query-02.png" width="408" alt="">
 
-- The average, max and min temperatures of the second quarter in Basque Country -higher max temperature first-:
-
 ```sql
+/*
+    The average, max and min temperatures of the second quarter
+    in Basque Country -higher max temperature first-
+*/
    select *
      from temps_by_quarter
     where quarter = 2
@@ -221,9 +224,11 @@ select *
 
 <img src="images/airflow-adhoc-query-03.png" width="445" alt="">
 
-- The average, max and min temperatures of the 10 hottest cities this year:
-
 ```sql
+/*
+    The average, max and min temperatures of the 10 hottest
+    cities this year
+*/
    select *
      from temps_by_year
  order by tavg desc
@@ -244,4 +249,4 @@ docker-compose down
 
 It will delete all the resources created to run Apache Airflow (containers, networks, etc).
 
-And that's it :-)
+And that's all :-)
