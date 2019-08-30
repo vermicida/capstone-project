@@ -177,7 +177,23 @@ Click **Save**.
 
 ### Running the Capstone Project DAG<a name="running-the-capstone-project-dag"></a>
 
-You can go to the DAGs menu and see the Capstone Project DAG listed. Turn **On** the switch next to the DAG name to make the Apache Airflow scheduler run the defined tasks:
+You can go to the DAGs menu and see the Capstone Project DAG listed. By default, the operator in charge of importing the weather from the AEMET API, will retrieve any info between **Jun 20th** and **Jul 10th**, but you can change that by editing the DAG file -located at `src/airflow/dag/capstone.py`-, in the instantiation of the operator `ImportWeatherOperator`:
+
+```python
+...
+import_weather = ImportWeatherOperator(
+    task_id='import_weather',
+    ddbb_conn_id='ddbb_conn',
+    aemet_conn_id='aemet_conn',
+    from_date='2019-06-20',       # This is the initial date
+    to_date='2019-07-10'          # This is the ending date
+)
+...
+```
+
+Use the standard [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) to set a date.
+
+Turn **On** the switch next to the DAG name to make the Apache Airflow scheduler run the defined tasks:
 
 <img src="images/airflow-dag-01.png" width="1010" alt="DAG list">
 
@@ -200,7 +216,7 @@ And run queries like these -don't forget to select the connection `ddbb_conn`-:
 ```sql
 
 /*
-    The average, max and min temperatures in Madrid by month
+The average, max and min temperatures in Madrid by month
 */
 
 select *
@@ -212,8 +228,7 @@ select *
 
 ```sql
 /*
-    The average, max and min temperatures of the second quarter
-    in Basque Country -higher max temperature first-
+The average, max and min temperatures of the second quarter in Basque Country -higher max temperature first-
 */
    select *
      from temps_by_quarter
@@ -226,8 +241,7 @@ select *
 
 ```sql
 /*
-    The average, max and min temperatures of the 10 hottest
-    cities this year
+The average, max and min temperatures of the 10 hottest cities this year
 */
    select *
      from temps_by_year
