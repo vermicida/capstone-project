@@ -1,7 +1,7 @@
 version: '3'
 services:
 
-  ddbb-staging:
+  ddbb:
     image: postgres:11.5
     environment:
       - POSTGRES_USER=admin
@@ -9,11 +9,6 @@ services:
       - POSTGRES_DB=weather
     ports:
       - "5432:5432"
-
-  ddbb:
-    image: diegoherrera/cassandra:capstone
-    environment:
-      - CASSANDRA_KEYSPACE=weather
 
   postgres:
     image: postgres:11.5

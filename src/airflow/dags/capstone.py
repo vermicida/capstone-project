@@ -1,5 +1,5 @@
 from airflow import DAG
-from datetime import datetime
+from datetime import datetime, timedelta
 from airflow.operators.capstone_plugin import AggregateTableOperator
 from airflow.operators.capstone_plugin import CreateTableOperator
 from airflow.operators.capstone_plugin import ImportWeatherOperator
@@ -15,8 +15,9 @@ options = {
         'owner': 'Diego Herrera',
         'depends_on_past': False,
         'retries': 3,
-        'retry_delay': 5,
-        'email_on_retry': False
+        'retry_delay': timedelta(minutes=3),
+        'email_on_retry': False,
+        'email_on_failure': False
     }
 }
 
@@ -28,51 +29,51 @@ with DAG('capstone', **options) as dag:
 
     create_weather_table = CreateTableOperator(
         task_id='create_weather_table',
-        ddbb_conn_id='ddbb-conn',
+        ddbb_conn_id='ddbb_conn',
         table='weather_staging'
     )
 
     import_weather = ImportWeatherOperator(
         task_id='import_weather',
-        ddbb_conn_id='ddbb-conn',
-        aemet_conn_id='aemet-conn',
+        ddbb_conn_id='ddbb_conn',
+        aemet_conn_id='aemet_conn',
         from_date='2019-06-20',
         to_date='2019-07-10'
     )
 
     create_temps_by_month_table = CreateTableOperator(
         task_id='create_temps_by_month_table',
-        ddbb_conn_id='ddbb-conn',
+        ddbb_conn_id='ddbb_conn',
         table='temps_by_month'
     )
 
     create_temps_by_quarter_table = CreateTableOperator(
         task_id='create_temps_by_quarter_table',
-        ddbb_conn_id='ddbb-conn',
+        ddbb_conn_id='ddbb_conn',
         table='temps_by_quarter'
     )
 
     create_temps_by_year_table = CreateTableOperator(
         task_id='create_temps_by_year_table',
-        ddbb_conn_id='ddbb-conn',
+        ddbb_conn_id='ddbb_conn',
         table='temps_by_year'
     )
 
     import_temps_by_month_table = AggregateTableOperator(
         task_id='import_temps_by_month_table',
-        ddbb_conn_id='ddbb-conn',
+        ddbb_conn_id='ddbb_conn',
         table='temps_by_month'
     )
 
     import_temps_by_quarter_table = AggregateTableOperator(
         task_id='import_temps_by_quarter_table',
-        ddbb_conn_id='ddbb-conn',
+        ddbb_conn_id='ddbb_conn',
         table='temps_by_quarter'
     )
 
     import_temps_by_year_table = AggregateTableOperator(
         task_id='import_temps_by_year_table',
-        ddbb_conn_id='ddbb-conn',
+        ddbb_conn_id='ddbb_conn',
         table='temps_by_year'
     )
 
