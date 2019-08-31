@@ -199,11 +199,11 @@ Turn **On** the switch next to the DAG name to make the Apache Airflow scheduler
 
 You can navigate the DAG details by clicking in its name. The **Graph view** shows a diagram on how the tasks are going to be executed:
 
-<img src="images/airflow-dag-02.png" width="917 " alt="DAG graph view">
+<img src="images/airflow-dag-02.png" width="1064 " alt="DAG graph view">
 
 You can also check how the Apache Airflow scheduler is doing with the DAG tasks on the **Tree view** tab. Dark green means good!
 
-<img src="images/airflow-dag-03.png" width="388" alt="DAG tree view">
+<img src="images/airflow-dag-03.png" width="404" alt="DAG tree view">
 
 ### Analyzing the data<a name="analyzing-the-data"></a>
 

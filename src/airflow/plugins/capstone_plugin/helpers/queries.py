@@ -182,3 +182,8 @@ INSERTION_QUERIES = {
         on conflict on constraint yearly_weather_unique do nothing;
     """
 }
+
+SELECTION_QUERIES = {
+
+    'count': 'select count(*) from {}'
+}

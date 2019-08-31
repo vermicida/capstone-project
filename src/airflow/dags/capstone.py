@@ -2,6 +2,7 @@ from airflow import DAG
 from datetime import datetime, timedelta
 from airflow.operators.capstone_plugin import AggregateTableOperator
 from airflow.operators.capstone_plugin import CreateTableOperator
+from airflow.operators.capstone_plugin import DataQualityOperator
 from airflow.operators.capstone_plugin import ImportWeatherOperator
 from airflow.operators.dummy_operator import DummyOperator
 
@@ -77,6 +78,17 @@ with DAG('capstone', **options) as dag:
         table='temps_by_year'
     )
 
+    test_data_quality = DataQualityOperator(
+        task_id='test_data_quality',
+        ddbb_conn_id='ddbb_conn',
+        tables=(
+            'weather_staging',
+            'temps_by_month',
+            'temps_by_quarter',
+            'temps_by_year'
+        )
+    )
+
     # Creates the staging table.
     start >> create_weather_table
 
@@ -93,7 +105,10 @@ with DAG('capstone', **options) as dag:
     create_temps_by_quarter_table >> import_temps_by_quarter_table
     create_temps_by_year_table >> import_temps_by_year_table
 
+    # Tests the quality of the tables data.
+    import_temps_by_month_table >> test_data_quality
+    import_temps_by_quarter_table >> test_data_quality
+    import_temps_by_year_table >> test_data_quality
+
     # Pipeline end.
-    import_temps_by_month_table >> end
-    import_temps_by_quarter_table >> end
-    import_temps_by_year_table >> end
+    test_data_quality >> end

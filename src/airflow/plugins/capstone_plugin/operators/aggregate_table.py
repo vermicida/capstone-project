@@ -31,7 +31,7 @@ class AggregateTableOperator(BaseOperator):
 
         Parameters:
             ddbb_conn_id (str): The identifier of the database connection.
-            table (str): The table you want to create.
+            table (str): The table you want to populate.
         """
 
         super().__init__(*args, **kwargs)
