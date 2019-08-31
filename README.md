@@ -30,7 +30,7 @@ The premises are:
 
 We can use [Apache Airflow](https://airflow.apache.org/) and [PostgreSQL](https://www.postgresql.org/) to orchestrate the pipeline. It's a simple pipeline; we can run it locally in a Docker services topology. The architecture model can be like this:
 
-<img src="images/architecture-model.png" width="595" alt="Arquitecture model">
+<img src="images/architecture-model.png" width="480" alt="Arquitecture model">
 
 - Apache Airflow with a LocalExecutor
 - A PostgreSQL instance for Apache Airflow's Database Backend
@@ -40,7 +40,7 @@ How this is accomplished with Docker is commented [later](#running-apache-airflo
 
 The data pipeline is shown below:
 
-<img src="images/data-flow.png" width="880" alt="Data flow">
+<img src="images/data-flow.png" width="680" alt="Data flow">
 
 - The source data is retrieved from the AEMET API using a custom Apache Airflow hook. This hook queries the API and transforms the response, a JSON object, into a [Pandas](https://pandas.pydata.org/) DataFrame to ease the data wrangling.
 - A custom Apache Airflow operator takes the weather DataFrame and pushes it into a staging table in PostgreSQL. This master data will be use as the source for the fact tables.
@@ -82,6 +82,7 @@ This tree shows the repository structure. Only the project's main files are desc
 │   │           │   ├── __init__.py
 │   │           │   ├── aggregate_table.py   # Custom operator to aggregate data
 │   │           │   ├── create_table.py      # Custom operator to create tables
+│   │           │   ├── data_quality.py      # Custom operator to test the data quality
 │   │           │   └── import_weather.py    # Custom operator to import weather data
 │   │           └── __init__.py
 ├── .editorconfig
